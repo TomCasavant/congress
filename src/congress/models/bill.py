@@ -4,6 +4,7 @@ from typing import Any, TypeVar, Type, cast, Optional, List, Dict
 import dateutil.parser
 from congress.rest_adapter import RestAdapter
 from functools import cached_property
+
 from congress.models.amendment_result import AmendmentsResult
 from congress.models.committees_result import CommitteesResult
 from congress.models.cosponsors_result import CosponsorsResult
@@ -14,6 +15,11 @@ from congress.models.text_result import TextResult
 from congress.models.titles_result import TitlesResult
 from congress.models.latest_action import LatestAction
 from congress.models.actions_result import ActionsResult
+from congress.models.subject import PolicyArea
+from congress.models.law import Law
+from congress.models.committee import CommitteeReport
+from congress.models.cbo_cost_estimate import CboCostEstimate
+from congress.models.cosponsor import Sponsor
 
 class Bill(BaseModel):
     _rest_adapter: Optional[RestAdapter] = PrivateAttr(default=None)
@@ -29,6 +35,13 @@ class Bill(BaseModel):
     update_date_including_text: Optional[datetime] = Field(None, alias="updateDateIncludingText")
     url: Optional[str] = None
 
+    cbo_cost_estimates: Optional[List[CboCostEstimate]] = Field(None, alias="cboCostEstimates")
+    committee_reports: Optional[List[CommitteeReport]] = Field(None, alias="committeeReports")
+    constitutional_authority_statement_text: Optional[str] = Field(None, alias="constitutionalAuthorityStatementText")
+    laws: Optional[List[Law]] = None
+    policy_area: Optional[PolicyArea] = Field(None, alias="policyArea")
+    sponsors: Optional[List[Sponsor]] = None
+    
     class Config:
         populate_by_name = True
         arbitrary_types_allowed = True
@@ -47,31 +60,35 @@ class Bill(BaseModel):
     @cached_property
     def actions(self):
         return ActionsResult.from_result(self._get_endpoint("actions"), self._rest_adapter)
-        
+
+    @cached_property
+    def amendments(self):
+        return AmendmentsResult.from_result(self._get_endpoint("amendments"), self._rest_adapter)
+
     @cached_property
     def committees(self):
         return CommitteesResult.from_result(self._get_endpoint("committees"), self._rest_adapter)
-    
+
     @cached_property
     def cosponsors(self):
         return CosponsorsResult.from_result(self._get_endpoint("cosponsors"), self._rest_adapter)
-    
+
     @cached_property
     def related_bills(self):
         return RelatedBillsResult.from_result(self._get_endpoint("relatedbills"), self._rest_adapter)
-    
+
     @cached_property
     def subjects(self):
         return SubjectsResult.from_result(self._get_endpoint("subjects"), self._rest_adapter)
-    
+
     @cached_property
     def summaries(self):
         return SummariesResult.from_result(self._get_endpoint("summaries"), self._rest_adapter)
-    
+
     @cached_property
     def titles(self):
         return TitlesResult.from_result(self._get_endpoint("titles"), self._rest_adapter)
-    
+
     @cached_property
     def text(self):
         return TextResult.from_result(self._get_endpoint("text"), self._rest_adapter)

@@ -10,3 +10,7 @@ class Committee(BaseModel):
     system_code: Optional[str] = ''
     type: Optional[str] = ''
     url: Optional[str] = ''
+
+class CommitteeReport(BaseModel):
+    citation: Optional[str] = None
+    url: Optional[str] = None

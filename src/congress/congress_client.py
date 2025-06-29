@@ -50,3 +50,35 @@ class CongressClient:
         bill.set_rest_adapter(self._rest_adapter)
         return bill
     
+    def get_laws(self, law_type: str = None, law_number: int = None, congress: int = None):
+        if not congress:
+            congress = self.CURRENT_CONGRESS
+
+        if law_number is not None and law_type is None:
+            raise ValueError("law_number cannot be used without law_type")
+
+        endpoint = f"/law/{congress}"
+        if law_type is not None:
+            endpoint += f"/{law_type}"
+        if law_number is not None:
+            endpoint += f"/{law_number}"
+
+        return BillResult.from_result(self._rest_adapter.get(endpoint=endpoint), self._rest_adapter)
+
+    def get_law(self, law_type: str, law_number: int, congress: int = None) -> Bill:
+        if congress is None:
+            congress = self.CURRENT_CONGRESS
+
+        if not law_type or not law_number:
+            raise ValueError("law_type and law_number are required for get_law")
+
+        endpoint = f"/law/{congress}/{law_type}/{law_number}"
+        result = self._rest_adapter.get(endpoint=endpoint)
+        bill_data = result.data.get("bill")
+
+        if not bill_data:
+            raise ValueError(f"No law data found for {congress}/{law_type}/{law_number}")
+
+        bill = Bill(**bill_data)
+        bill.set_rest_adapter(self._rest_adapter)
+        return bill
